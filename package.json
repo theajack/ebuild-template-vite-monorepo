@@ -1,5 +1,5 @@
 {
-  "name": "ve-game-sdk",
+  "name": "ve-vite-monorepo",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -7,8 +7,9 @@
     "build": "node build/build-all",
     "build:app": "vite build -m=app",
     "build:lib": "node build/build-single-lib",
-    "init:package": "node ./scripts/init-packages-info.js",
-    "init:monorepo": "node ./scripts/init-packages-info.js dev"
+    "init:pub": "node ./build/init-package-info.js EXEC",
+    "init:dev": "node ./build/init-package-info.js dev EXEC",
+    "publish": "node ./build/publish.js EXEC"
   },
   "devDependencies": {
     "@rollup/plugin-babel": "^6.0.4",

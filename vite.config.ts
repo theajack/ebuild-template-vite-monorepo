@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 import legacy from '@vitejs/plugin-legacy';
 import { resolve } from 'path';
 import { babel } from '@rollup/plugin-babel';
-import { upcaseFirstLetter } from './build/utils';
+import { buildPackageName, upcaseFirstLetter } from './build/utils';
 import vue from '@vitejs/plugin-vue';
 import { existsSync } from 'fs';
 // import { uglify } from 'rollup-plugin-uglify';
@@ -25,24 +25,22 @@ const Mode = {
 // @ts-ignore
 export default defineConfig(({ mode }: {mode: string}) => {
 
-    const [ buildMode, pkgName, extra ] = mode.split('_');
+    const [ buildMode, dirName, extra ] = mode.split('_');
 
-    console.log(`vite build mode=${buildMode}; pkgName=${pkgName}; extra=${extra}`);
+    console.log(`vite build mode=${buildMode}; dirName=${dirName}; extra=${extra}`);
 
-    console.log(`${Date.now()}:INFO: mode=${buildMode}, pkgName=${pkgName}`);
+    console.log(`${Date.now()}:INFO: mode=${buildMode}, dirName=${dirName}`);
 
     const config = {
         [Mode.Dev]: geneDevAppConfig,
         [Mode.BuildApp]: geneBuildAppConfig,
-        [Mode.BuildLib]: () => geneBuildLibConfig(pkgName),
+        [Mode.BuildLib]: () => geneBuildLibConfig(dirName),
     };
     const CommonConfig: UserConfig = {
         define: {
             __DEV__: `${buildMode === Mode.Dev}`,
             __APP__: `${buildMode === Mode.Dev || buildMode === Mode.BuildApp}`,
-            __VERSION__: `"${getVersion(
-                buildMode === Mode.BuildLib ? pkgName : void 0
-            )}"`,
+            __VERSION__: `"${getVersion()}"`,
         },
         plugins: [
         ],
@@ -100,8 +98,8 @@ function geneBuildAppConfig (): UserConfig {
 }
 
 // ! 构建 lib 时的配置
-function geneBuildLibConfig (pkgName: string): UserConfig {
-    const pkgRoot = resolve(__dirname, `./packages/${pkgName}`);
+function geneBuildLibConfig (dirName: string): UserConfig {
+    const pkgRoot = resolve(__dirname, `./packages/${dirName}`);
 
     // 取lib包的依赖;
     const deps = require(resolve(pkgRoot, './package.json'));
@@ -111,7 +109,7 @@ function geneBuildLibConfig (pkgName: string): UserConfig {
             minify: true,
             lib: {
                 entry: resolve(pkgRoot, 'src/index.ts'), // 打包的入口文件
-                ...SDKlibConfig(pkgName),
+                ...SDKlibConfig(dirName),
             },
             rollupOptions: {
                 // 不需要
@@ -127,8 +125,8 @@ function geneBuildLibConfig (pkgName: string): UserConfig {
 }
 
 
-function getVersion (name = 'main') {
-    return require(resolve(__dirname, `./packages/${name}/package.json`)).version;
+function getVersion () {
+    return require('./package.json').version;
 }
 
 const babelPlugin = () => (
@@ -138,11 +136,11 @@ const babelPlugin = () => (
         configFile: resolve(__dirname, './build/babel.config.js'),
     })
 );
-function SDKlibConfig (pkgName: string): Partial<LibraryOptions> {
+function SDKlibConfig (dirName: string): Partial<LibraryOptions> {
     return {
-        name: upcaseFirstLetter(pkgName), // 包名
+        name: upcaseFirstLetter(dirName), // 包名
         formats: [ 'es', 'iife' ], // 打包模式，默认是es和umd都打
-        fileName: (format: string) => `${pkgName}.${format}.min.js`,
+        fileName: (format: string) => `${buildPackageName(dirName)}.${format}.min.js`,
     };
 }
 /*

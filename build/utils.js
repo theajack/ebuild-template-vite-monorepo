@@ -199,6 +199,14 @@ function execBin (name, cmd = name) {
     return `node ${binPath}`;
 }
 
+function buildPackageName (dirName) {
+    return `vm-${dirName}`; // todo 修改包命名规则
+}
+
+function isNodeExec () {
+    return (process.argv[process.argv.length - 1] === 'EXEC');
+}
+
 module.exports = {
     execBin,
     exec,
@@ -218,4 +226,6 @@ module.exports = {
     writeFile,
     log,
     buildSinglePkg,
+    buildPackageName,
+    isNodeExec,
 };
